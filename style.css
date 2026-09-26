@@ -1,0 +1,150 @@
+:root {
+  --bg: #eef6fc;
+  --surface: #ffffff;
+  --text: #0f2233;
+  --muted: #5b7085;
+  --accent: #0b7fd6;
+  --accent-soft: #d7ecfb;
+  --paused: #c77700;
+  --paused-soft: #fdf0dc;
+  --off: #8a99a8;
+  --border: #d5e2ec;
+  --warn-bg: #fdecec;
+  --warn-text: #9b1c1c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1520;
+    --surface: #13212f;
+    --text: #e6f0f8;
+    --muted: #93a7ba;
+    --accent: #4fb0ff;
+    --accent-soft: #15324a;
+    --paused: #f0a93b;
+    --paused-soft: #3a2b12;
+    --off: #6b7c8c;
+    --border: #22364a;
+    --warn-bg: #3a1818;
+    --warn-text: #ffb4b4;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.wrap { max-width: 480px; margin: 0 auto; padding: 24px 16px 48px; }
+
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.brand h1 { margin: 0; font-size: 1.6rem; letter-spacing: .02em; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 6px solid var(--off);
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+}
+.card[data-state="on"] { border-top-color: var(--accent); }
+.card[data-state="paused"] { border-top-color: var(--paused); }
+
+.status-label { margin: 0; font-weight: 600; color: var(--muted); }
+.card[data-state="on"] .status-label { color: var(--accent); }
+.card[data-state="paused"] .status-label { color: var(--paused); }
+
+.countdown {
+  margin: 8px 0 4px;
+  font-size: clamp(2.4rem, 12vw, 3.4rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.card[data-state="off"] .countdown { color: var(--off); }
+.sub { margin: 0 0 20px; color: var(--muted); font-size: .95rem; }
+
+/* toggle switch */
+.toggle { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
+.toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.track {
+  width: 56px; height: 32px; border-radius: 999px;
+  background: var(--off); position: relative; transition: background .2s;
+}
+.thumb {
+  position: absolute; top: 3px; left: 3px; width: 26px; height: 26px;
+  border-radius: 50%; background: #fff; transition: transform .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.toggle input:checked + .track { background: var(--accent); }
+.toggle input:checked + .track .thumb { transform: translateX(24px); }
+.toggle input:focus-visible + .track { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+.toggle-text { font-weight: 600; }
+
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; }
+.btn {
+  font: inherit; font-size: .95rem; cursor: pointer;
+  padding: 10px 16px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--accent-soft); color: var(--text);
+}
+.btn:hover { border-color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.ghost { background: transparent; }
+#pauseBtn, #resumeBtn { background: var(--paused-soft); }
+
+.warn {
+  margin: 16px 0 0; padding: 10px 12px; border-radius: 10px;
+  background: var(--warn-bg); color: var(--warn-text); font-size: .9rem; text-align: left;
+}
+
+.tips { margin-top: 24px; color: var(--muted); font-size: .92rem; }
+.tips h2 { font-size: 1rem; color: var(--text); margin: 0 0 8px; }
+.tips ul { padding-left: 18px; margin: 0 0 12px; }
+.tips li { margin-bottom: 6px; }
+.link-btn {
+  font: inherit; background: none; border: 0; padding: 0;
+  color: var(--accent); text-decoration: underline; cursor: pointer;
+}
+[hidden] { display: none !important; }
+
+/* ---- animated reminder ---- */
+.buddy-overlay {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  background: rgba(8, 24, 40, .78);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  overflow: hidden; padding: 16px;
+  animation: fadeIn .3s ease-out;
+}
+.buddy { position: relative; width: min(260px, 70vw); padding-top: 90px; animation: walkIn 1.8s ease-out both; }
+.boy { display: block; width: 100%; height: auto; overflow: visible; }
+.sign {
+  position: absolute; bottom: calc(100% - 112px); left: 68%; transform: translateX(-50%);
+  width: max-content; max-width: 70vw;
+  background: #fffdf5; color: #0f2233; border: 3px solid #8b5a2b; border-radius: 12px;
+  padding: 12px 16px; font-weight: 800; font-size: clamp(1rem, 4.5vw, 1.25rem); text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  transform-origin: 50% 160%;
+  animation: popSign .4s 1.7s ease-out both, sway 2.4s 2.1s ease-in-out infinite;
+}
+.boy .leg { transform-box: fill-box; transform-origin: 50% 0; animation: step .3s ease-in-out 6 alternate; }
+.boy .leg-r { animation-delay: .3s; }
+.boy { animation: bob .3s ease-in-out 6 alternate; }
+.boy .water { transform-box: fill-box; transform-origin: 50% 100%; animation: slosh 1.2s ease-in-out infinite alternate; }
+.buddy-actions { display: flex; gap: 8px; animation: fadeIn .4s 1.9s both; }
+.buddy-actions .btn { background: var(--surface); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.buddy-actions .btn.primary { background: var(--accent); }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes walkIn { from { transform: translateX(-100vw); } to { transform: translateX(0); } }
+@keyframes step { from { transform: rotate(14deg); } to { transform: rotate(-14deg); } }
+@keyframes bob { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+@keyframes popSign { 0% { opacity: 0; transform: translateX(-50%) scale(.3); } 70% { transform: translateX(-50%) scale(1.1); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
+@keyframes sway { 0%, 100% { transform: translateX(-50%) rotate(-3deg); } 50% { transform: translateX(-50%) rotate(3deg); } }
+@keyframes slosh { from { transform: scaleY(.9) skewY(-4deg); } to { transform: scaleY(1) skewY(4deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .buddy, .sign, .boy, .boy .leg, .boy .water, .buddy-actions { animation: none !important; }
+}

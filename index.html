@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H2O Reminder</title>
+  <meta name="description" content="A reminder to drink water every 2 hours, with an on/off switch for meetings.">
+  <meta name="theme-color" content="#0b7fd6">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand">
+      <img src="icons/icon-192.png" alt="" width="40" height="40">
+      <h1>H2O</h1>
+    </header>
+
+    <section class="card" id="card" data-state="off">
+      <p class="status-label" id="statusLabel">Reminders are off</p>
+      <p class="countdown" id="countdown">--:--:--</p>
+      <p class="sub" id="subText">Turn on to get a nudge to drink water every 2 hours.</p>
+
+      <label class="toggle">
+        <input type="checkbox" id="toggle" role="switch">
+        <span class="track"><span class="thumb"></span></span>
+        <span class="toggle-text" id="toggleText">Enable reminders</span>
+      </label>
+
+      <div class="actions">
+        <button type="button" id="pauseBtn" class="btn">⏸ Pause 1 hour</button>
+        <button type="button" id="resumeBtn" class="btn" hidden>▶ Resume now</button>
+        <button type="button" id="drankBtn" class="btn ghost">💧 I drank — restart timer</button>
+      </div>
+
+      <p class="warn" id="permWarn" hidden>
+        Notifications are blocked for this site. Click the lock icon next to the address bar →
+        <b>Notifications</b> → <b>Allow</b>, then reload this page.
+      </p>
+      <p class="warn" id="unsupported" hidden>
+        This browser doesn't support notifications. Try Chrome, Edge or Firefox on a computer.
+      </p>
+    </section>
+
+    <section class="tips">
+      <h2>Good to know</h2>
+      <ul>
+        <li><b>Keep this page open</b> (minimizing is fine). Reminders stop if you close it.</li>
+        <li><b>In a meeting?</b> Tap <i>Pause 1 hour</i>, and reminders come back on by themselves.</li>
+        <li><b>Install it</b> as an app so it runs in its own small window:
+          <button type="button" id="installBtn" class="link-btn" hidden>Install app</button>
+          <span id="installHint">use your browser's “Install” icon in the address bar.</span></li>
+        <li>Settings are saved only in your own browser, so share the link with friends and each person gets their own reminders.</li>
+      </ul>
+      <button type="button" id="testBtn" class="link-btn">Preview the reminder</button>
+    </section>
+  </main>
+
+  <!-- Animated reminder: a boy walks in with a water bottle, holding up a sign with the message -->
+  <div class="buddy-overlay" id="buddy" hidden role="alertdialog" aria-labelledby="buddyMsg">
+    <div class="buddy">
+      <div class="sign" id="buddyMsg">Time to drink water! 💧</div>
+      <svg class="boy" viewBox="0 0 160 220" aria-hidden="true">
+        <!-- sign stick -->
+        <rect x="105" y="0" width="6" height="96" rx="2" fill="#8b5a2b"/>
+        <!-- legs -->
+        <g class="leg leg-l"><rect x="45" y="150" width="12" height="46" rx="5" fill="#27415e"/><ellipse cx="50" cy="198" rx="10" ry="5" fill="#222"/></g>
+        <g class="leg leg-r"><rect x="63" y="150" width="12" height="46" rx="5" fill="#27415e"/><ellipse cx="70" cy="198" rx="10" ry="5" fill="#222"/></g>
+        <!-- body -->
+        <rect x="38" y="96" width="44" height="60" rx="14" fill="#0b7fd6"/>
+        <text x="60" y="133" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" font-family="system-ui, sans-serif">H2O</text>
+        <!-- raised arm holding the sign -->
+        <line x1="78" y1="106" x2="106" y2="86" stroke="#f1c6a0" stroke-width="10" stroke-linecap="round"/>
+        <circle cx="108" cy="86" r="7" fill="#f1c6a0"/>
+        <!-- bottle -->
+        <g class="bottle">
+          <rect x="12" y="112" width="22" height="48" rx="6" fill="#cfeaff" stroke="#5aa9e6" stroke-width="2"/>
+          <rect class="water" x="14" y="128" width="18" height="30" rx="4" fill="#4fb0ff"/>
+          <rect x="16" y="104" width="14" height="9" rx="2" fill="#0b7fd6"/>
+        </g>
+        <!-- arm holding the bottle -->
+        <line x1="42" y1="106" x2="26" y2="134" stroke="#f1c6a0" stroke-width="10" stroke-linecap="round"/>
+        <circle cx="25" cy="136" r="7" fill="#f1c6a0"/>
+        <!-- head -->
+        <circle cx="60" cy="66" r="28" fill="#f1c6a0"/>
+        <path d="M32 62 Q34 34 60 36 Q88 34 88 62 Q80 48 60 50 Q42 48 32 62Z" fill="#3b2414"/>
+        <circle cx="50" cy="68" r="3.5" fill="#222"/>
+        <circle cx="70" cy="68" r="3.5" fill="#222"/>
+        <circle cx="44" cy="78" r="4" fill="#f5a3a3" opacity=".6"/>
+        <circle cx="76" cy="78" r="4" fill="#f5a3a3" opacity=".6"/>
+        <path d="M50 80 Q60 90 70 80" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="buddy-actions">
+      <button type="button" id="buddyDrank" class="btn primary">✓ I drank it</button>
+      <button type="button" id="buddyLater" class="btn ghost">Later</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

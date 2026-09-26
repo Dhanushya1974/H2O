@@ -36,14 +36,15 @@
       </div>
 
       <div class="warn" id="permWarn" hidden>
-        <b>Reminders are on</b>, and the boy will appear on this page. To also get desktop pop-ups while you're in other apps:
-        <span id="permDefault">click <button type="button" id="allowBtn" class="link-btn">Allow pop-ups</button>, then choose <b>Allow</b>.
-          In Edge, look for a <b>🔔 bell icon</b> at the right end of the address bar and click <b>Allow</b> there.</span>
-        <span id="permDenied" hidden>pop-ups are blocked for this site. Click the <b>lock / ⓘ icon</b> left of the address →
-          <b>Notifications</b> → <b>Allow</b>, then reload the page.</span>
+        <span id="permDefault">Click <b>Allow</b> when your browser asks to show notifications.
+          In Edge, if nothing pops up, click the <b>🔔 bell icon</b> at the right end of the address bar → <b>Allow</b>.
+          <button type="button" id="allowBtn" class="link-btn">Ask again</button></span>
+        <span id="permDenied" hidden>Notifications are blocked for this site, so reminders can't be sent.
+          Click the <b>lock / ⓘ icon</b> left of the address → <b>Notifications</b> → <b>Allow</b>, then reload the page.</span>
       </div>
+      <p class="warn" id="errorMsg" hidden></p>
       <p class="warn" id="unsupported" hidden>
-        This browser doesn't support desktop pop-ups, but the animated reminder still works on this page.
+        This browser can't receive reminders. Please use Chrome, Edge or Firefox on a computer.
       </p>
     </section>
 
@@ -51,10 +52,10 @@
     <section class="tips">
       <h2>Good to know</h2>
       <ul>
-        <li><b>Keep this page open</b> (minimizing is fine). Reminders stop if you close it.</li>
+        <li><b>You can close this tab.</b> Reminders still pop up as long as your browser is running (it usually keeps running in the background).</li>
         <li><b>Turn off:</b> flip the switch to OFF. Reminders stay off until you switch them back ON.</li>
         <li><b>In a meeting?</b> Tap <i>Pause 1 hour</i>, and reminders come back on by themselves.</li>
-        <li><b>Using other apps?</b> A Windows pop-up appears on top of whatever you're doing, and the boy is waiting when you come back to H2O.</li>
+        <li><b>Stop it from the pop-up:</b> every reminder has <i>Pause 1 hour</i> and <i>Turn off</i> buttons. Click the pop-up itself to see the boy.</li>
         <li><b>Install it</b> as an app so it runs in its own small window:
           <button type="button" id="installBtn" class="link-btn" hidden>Install app</button>
           <span id="installHint">use your browser's “Install” icon in the address bar.</span></li>

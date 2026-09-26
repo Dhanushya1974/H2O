@@ -1,0 +1,17 @@
+{
+  "name": "h2o",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A cute reminder to drink water every 2 hours, delivered as a push notification even when the tab is closed.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "web-push": "^3.6.7"
+  }
+}

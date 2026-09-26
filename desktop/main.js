@@ -7,6 +7,7 @@ const TEST = process.argv.includes('--test') || process.env.H2O_TEST === '1';
 const INTERVAL = TEST ? 60 * 1000 : 2 * 60 * 60 * 1000; // 2 hours (1 min in test mode)
 const PAUSE = TEST ? 30 * 1000 : 60 * 60 * 1000;        // 1 hour (30 s in test mode)
 const OVERLAY_HEIGHT = 460;
+const LOGIN_ARGS = ['--hidden']; // Windows starts H2O quietly in the tray at login
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -27,6 +28,45 @@ function save() {
 
 let tray = null;
 let overlay = null;
+let control = null;
+let quitting = false;
+
+// ---- control window (big ON/OFF switch, pause, etc.) ----
+function openControl() {
+  if (control) { control.show(); control.focus(); return; }
+  control = new BrowserWindow({
+    width: 380, height: 560, resizable: false, maximizable: false, fullscreenable: false,
+    title: 'H2O', icon: path.join(__dirname, 'icon.png'), autoHideMenuBar: true, show: false,
+    webPreferences: { preload: path.join(__dirname, 'preload.js') },
+  });
+  control.setMenu(null);
+  control.loadFile(path.join(__dirname, 'control.html'));
+  control.once('ready-to-show', () => control.show());
+  // Closing just hides it; H2O keeps running in the tray.
+  control.on('close', (e) => { if (!quitting) { e.preventDefault(); control.hide(); } });
+  control.on('closed', () => { control = null; });
+}
+
+function publicState() {
+  return { ...state, test: TEST, openAtLogin: app.getLoginItemSettings({ args: LOGIN_ARGS }).openAtLogin };
+}
+function pushState() {
+  if (control && !control.isDestroyed()) control.webContents.send('control:state', publicState());
+}
+
+ipcMain.handle('control:get', () => publicState());
+ipcMain.on('control:action', (_e, name) => {
+  switch (name) {
+    case 'on': setEnabled(true); break;
+    case 'off': setEnabled(false); break;
+    case 'pause': pause(); break;
+    case 'resume': resume(); break;
+    case 'drank': drank(); break;
+    case 'preview': showOverlay(); break;
+    case 'login-on': app.setLoginItemSettings({ openAtLogin: true, args: LOGIN_ARGS }); refreshTray(); break;
+    case 'login-off': app.setLoginItemSettings({ openAtLogin: false, args: LOGIN_ARGS }); refreshTray(); break;
+  }
+});
 
 // ---- overlay window ----
 function showOverlay() {
@@ -54,11 +94,8 @@ ipcMain.on('overlay:clickable', (_e, on) => {
   if (overlay) overlay.setIgnoreMouseEvents(!on, { forward: true });
 });
 ipcMain.on('overlay:choice', (_e, choice) => {
-  if (choice === 'drank' && state.enabled) {
-    state.nextAt = Date.now() + INTERVAL;
-    save();
-    refreshTray();
-  }
+  if (choice === 'drank' && state.enabled) drank();
+  else if (choice === 'off') setEnabled(false);
 });
 ipcMain.on('overlay:close', () => { if (overlay) overlay.close(); });
 
@@ -126,17 +163,21 @@ function statusText() {
 let lastMenuKey = '';
 function refreshTray() {
   if (!tray) return;
+  pushState();
   const status = statusText();
   tray.setToolTip(`H2O${TEST ? ' (test)' : ''}: ${status}`);
   const paused = state.enabled && state.pausedUntil > Date.now();
-  const openAtLogin = app.getLoginItemSettings().openAtLogin;
+  const openAtLogin = app.getLoginItemSettings({ args: LOGIN_ARGS }).openAtLogin;
   const key = [status, state.enabled, paused, openAtLogin].join('|');
   if (key === lastMenuKey) return;
   lastMenuKey = key;
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: status, enabled: false },
+    { label: 'Open H2O', click: openControl },
     { type: 'separator' },
-    { label: 'Reminders on', type: 'checkbox', checked: state.enabled, click: (i) => setEnabled(i.checked) },
+    state.enabled
+      ? { label: 'Turn reminders OFF', click: () => setEnabled(false) }
+      : { label: 'Turn reminders ON', click: () => setEnabled(true) },
     paused
       ? { label: 'Resume now', click: resume }
       : { label: TEST ? 'Pause (30 sec, test)' : 'Pause 1 hour (meeting mode)', enabled: state.enabled, click: pause },
@@ -144,14 +185,13 @@ function refreshTray() {
     { label: 'Show reminder now', click: showOverlay },
     { type: 'separator' },
     { label: 'Start with Windows', type: 'checkbox', checked: openAtLogin,
-      click: (i) => { app.setLoginItemSettings({ openAtLogin: i.checked }); refreshTray(); } },
-    { label: 'Quit H2O', click: () => app.quit() },
+      click: (i) => { app.setLoginItemSettings({ openAtLogin: i.checked, args: LOGIN_ARGS }); refreshTray(); } },
+    { label: 'Quit H2O (no more reminders)', click: () => { quitting = true; app.quit(); } },
   ]));
 }
 
-app.on('second-instance', () => {
-  if (Notification.isSupported()) new Notification({ title: 'H2O is already running', body: statusText() }).show();
-});
+app.on('second-instance', openControl);
+app.on('before-quit', () => { quitting = true; });
 
 app.whenReady().then(() => {
   load();
@@ -159,19 +199,18 @@ app.whenReady().then(() => {
     state.firstRun = false;
     state.enabled = true;
     state.nextAt = Date.now() + INTERVAL;
-    if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: true });
+    if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: true, args: LOGIN_ARGS });
     save();
   }
   if (!state.nextAt) state.nextAt = Date.now() + INTERVAL;
 
   const icon = nativeImage.createFromPath(path.join(__dirname, 'icon.png')).resize({ width: 32, height: 32 });
   tray = new Tray(icon);
-  tray.on('click', () => tray.popUpContextMenu());
+  tray.on('click', openControl);
   refreshTray();
 
-  if (Notification.isSupported()) {
-    new Notification({ title: 'H2O is running 💧', body: `${statusText()}. Right-click the drop icon near the clock for options.` }).show();
-  }
+  // Show the window on start, except when Windows starts H2O at login.
+  if (!process.argv.includes('--hidden')) openControl();
 
   setInterval(tick, TEST ? 1000 : 5000);
   powerMonitor.on('resume', tick);

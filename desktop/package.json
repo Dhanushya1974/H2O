@@ -15,7 +15,7 @@
   "build": {
     "appId": "com.h2o.reminder",
     "productName": "H2O",
-    "files": ["main.js", "preload.js", "overlay.html", "overlay.js", "icon.png"],
+    "files": ["main.js", "preload.js", "overlay.html", "overlay.js", "control.html", "control.js", "icon.png"],
     "win": { "target": "nsis", "icon": "icon.png" },
     "nsis": { "oneClick": true, "perMachine": false, "runAfterFinish": true, "artifactName": "H2O-Setup.${ext}" },
     "directories": { "output": "dist" }

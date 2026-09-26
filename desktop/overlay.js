@@ -15,6 +15,7 @@ function leave(choice) {
 }
 document.getElementById('drank').addEventListener('click', () => leave('drank'));
 document.getElementById('later').addEventListener('click', () => leave('later'));
+document.getElementById('off').addEventListener('click', () => leave('off'));
 
 // Walk away on his own after a while if nobody clicks.
 setTimeout(() => leave('timeout'), 90 * 1000);

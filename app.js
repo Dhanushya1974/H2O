@@ -12,7 +12,7 @@
     drankBtn: $('drankBtn'), permWarn: $('permWarn'), unsupported: $('unsupported'),
     installBtn: $('installBtn'), installHint: $('installHint'), testBtn: $('testBtn'),
     permDefault: $('permDefault'), permDenied: $('permDenied'), allowBtn: $('allowBtn'),
-    buddy: $('buddy'), buddyDrank: $('buddyDrank'), buddyLater: $('buddyLater'),
+    buddy: $('buddy'), buddyDrank: $('buddyDrank'), buddyLater: $('buddyLater'), buddyOff: $('buddyOff'),
   };
 
   const supported = 'Notification' in window;
@@ -125,7 +125,7 @@
     el.card.dataset.state = mode;
     el.toggle.checked = state.enabled;
     el.toggle.setAttribute('aria-checked', String(state.enabled));
-    el.toggleText.textContent = state.enabled ? 'Reminders on' : 'Enable reminders';
+    el.toggleText.textContent = state.enabled ? 'Reminders ON' : 'Reminders OFF';
 
     if (mode === 'off') {
       el.statusLabel.textContent = 'Reminders are off';
@@ -162,6 +162,7 @@
   el.drankBtn.addEventListener('click', drank);
   el.buddyDrank.addEventListener('click', () => (state.enabled ? drank() : hideBuddy()));
   el.buddyLater.addEventListener('click', later);
+  el.buddyOff.addEventListener('click', disable);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !el.buddy.hidden) later(); });
   document.addEventListener('visibilitychange', tick);
   el.testBtn.addEventListener('click', async () => {
@@ -186,15 +187,6 @@
     deferredPrompt = null;
     el.installBtn.hidden = true;
   });
-
-  // Desktop app download: on GitHub Pages (user.github.io/repo) link to that repo's latest release.
-  (() => {
-    const link = document.getElementById('downloadLink');
-    const m = location.hostname.match(/^([^.]+)\.github\.io$/);
-    const repo = location.pathname.split('/').filter(Boolean)[0];
-    if (m && repo) link.href = `https://github.com/${m[1]}/${repo}/releases/latest/download/H2O-Setup.exe`;
-    else link.href = 'desktop/dist/H2O-Setup.exe'; // local testing
-  })();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then((r) => { swReg = r; }).catch(() => {});

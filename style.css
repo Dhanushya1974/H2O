@@ -133,7 +133,7 @@ body {
 .boy { animation: bob .3s ease-in-out 6 alternate; }
 .boy .eyes { transform-box: fill-box; transform-origin: 50% 50%; animation: blink 3.5s 2s infinite; }
 .boy .water { transform-box: fill-box; transform-origin: 50% 100%; animation: slosh 1.2s ease-in-out infinite alternate; }
-.buddy-actions { display: flex; gap: 8px; animation: fadeIn .4s 1.9s both; }
+.buddy-actions { max-width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; animation: fadeIn .4s 1.9s both; }
 .buddy-actions .btn { background: var(--surface); }
 .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
 .buddy-actions .btn.primary { background: var(--accent); }
@@ -147,14 +147,9 @@ body {
 @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
 @keyframes slosh { from { transform: scaleY(.9) skewY(-4deg); } to { transform: scaleY(1) skewY(4deg); } }
 
+/* narrow screens: shift him left so the sign (held on his right) stays on screen */
+@media (max-width: 560px) { .buddy { left: -12vw; } }
+
 @media (prefers-reduced-motion: reduce) {
   .buddy, .sign, .boy, .boy .leg, .boy .water, .boy .eyes, .buddy-actions { animation: none !important; }
 }
-
-.download {
-  display: block; margin-top: 16px; padding: 14px 18px; border-radius: 14px; text-decoration: none;
-  background: var(--accent); color: #fff; text-align: center;
-}
-.download b { display: block; font-size: 1.05rem; }
-.download span { font-size: .88rem; opacity: .9; }
-.download:hover { filter: brightness(1.08); }

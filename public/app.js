@@ -42,9 +42,13 @@
     error = '';
     render();
   }
+  function report(msg) {
+    fetch('/api/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ msg }) }).catch(() => {});
+  }
   function fail(e) {
+    report(`${e && e.name}: ${e && e.message}`);
     error = navigator.onLine === false ? "You're offline. Changes will work again once you're back online."
-      : "Couldn't reach the H2O server. Please try again in a moment.";
+      : `Couldn't turn on reminders (${(e && e.message) || 'unknown error'}). Please try again.`;
     console.error(e);
     render();
   }
@@ -80,6 +84,7 @@
     let perm = Notification.permission;
     if (perm === 'default') perm = await Notification.requestPermission();
     asking = false;
+    report(`permission=${perm}`);
     if (perm !== 'granted') { render(); return; }
     try { await subscribe(); } catch (e) { fail(e); }
   }

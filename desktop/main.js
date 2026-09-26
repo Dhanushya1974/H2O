@@ -7,7 +7,9 @@ const TEST = process.argv.includes('--test') || process.env.H2O_TEST === '1';
 const INTERVAL = TEST ? 60 * 1000 : 2 * 60 * 60 * 1000; // 2 hours (1 min in test mode)
 const PAUSE = TEST ? 30 * 1000 : 60 * 60 * 1000;        // 1 hour (30 s in test mode)
 const OVERLAY_HEIGHT = 460;
-const LOGIN_ARGS = ['--hidden']; // Windows starts H2O quietly in the tray at login
+// Windows starts H2O quietly in the tray at login. When run from the project folder (not installed),
+// Electron also needs the app folder as an argument.
+const LOGIN_ARGS = app.isPackaged ? ['--hidden'] : [app.getAppPath(), '--hidden'];
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -199,7 +201,7 @@ app.whenReady().then(() => {
     state.firstRun = false;
     state.enabled = true;
     state.nextAt = Date.now() + INTERVAL;
-    if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: true, args: LOGIN_ARGS });
+    if (!TEST) app.setLoginItemSettings({ openAtLogin: true, args: LOGIN_ARGS });
     save();
   }
   if (!state.nextAt) state.nextAt = Date.now() + INTERVAL;

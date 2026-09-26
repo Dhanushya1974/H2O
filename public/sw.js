@@ -1,7 +1,7 @@
 // Service worker: shows push reminders (even when no H2O tab is open), handles the
 // Pause / Turn off buttons on the pop-up, and caches the page for offline use.
-const CACHE = 'h2o-v2';
-const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png'];
+const CACHE = 'h2o-v3';
+const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png', 'reminder.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
@@ -40,6 +40,7 @@ self.addEventListener('push', (e) => {
     await self.registration.showNotification(d.title || 'Time to drink water 💧', {
       body: d.body || 'Grab a glass of water and stay hydrated!',
       icon: 'icons/icon-192.png',
+      image: 'reminder.png', // the boy with his sign
       badge: 'icons/icon-192.png',
       tag: 'h2o',
       renotify: true,

@@ -62,6 +62,13 @@ function applyAction(s, action) {
 // ---- web app ----
 const app = express();
 app.use(express.json({ limit: '10kb' }));
+app.use('/api', (req, _res, next) => { console.log(new Date().toLocaleTimeString(), req.headers.host, req.method, req.path); next(); });
+
+// Browsers report problems here so they show up in the server log.
+app.post('/api/log', (req, res) => {
+  console.log('client:', String((req.body && req.body.msg) || '').slice(0, 300));
+  res.json({ ok: true });
+});
 
 app.get('/api/vapid', (_req, res) => res.json({ publicKey: vapid.publicKey }));
 
@@ -123,6 +130,7 @@ async function tick() {
       const payload = JSON.stringify({ id, test: !!s.test, title: 'Time to drink water 💧', body: 'Grab a glass of water and stay hydrated!' });
       try {
         await webpush.sendNotification(s.subscription, payload, { TTL: 30 * 60, urgency: 'high', topic: 'h2o' });
+        console.log(new Date().toLocaleTimeString(), 'reminder sent to', id.slice(0, 6));
       } catch (err) {
         if (err.statusCode === 404 || err.statusCode === 410) { delete subs[id]; } // browser unsubscribed
         else console.error('push failed', id.slice(0, 8), err.statusCode || err.message);

@@ -187,6 +187,15 @@
     el.installBtn.hidden = true;
   });
 
+  // Desktop app download: on GitHub Pages (user.github.io/repo) link to that repo's latest release.
+  (() => {
+    const link = document.getElementById('downloadLink');
+    const m = location.hostname.match(/^([^.]+)\.github\.io$/);
+    const repo = location.pathname.split('/').filter(Boolean)[0];
+    if (m && repo) link.href = `https://github.com/${m[1]}/${repo}/releases/latest/download/H2O-Setup.exe`;
+    else link.href = 'desktop/dist/H2O-Setup.exe'; // local testing
+  })();
+
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then((r) => { swReg = r; }).catch(() => {});
   }

@@ -1,0 +1,27 @@
+{
+  "name": "h2o-reminder",
+  "productName": "H2O",
+  "version": "1.0.0",
+  "description": "A cute reminder to drink water every 2 hours, shown on top of any app.",
+  "main": "main.js",
+  "author": "Dhanushya",
+  "license": "MIT",
+  "scripts": {
+    "overlay": "node build-overlay.js",
+    "start": "npm run overlay && electron .",
+    "test-mode": "npm run overlay && electron . --test",
+    "dist": "npm run overlay && electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.h2o.reminder",
+    "productName": "H2O",
+    "files": ["main.js", "preload.js", "overlay.html", "overlay.js", "icon.png"],
+    "win": { "target": "nsis", "icon": "icon.png" },
+    "nsis": { "oneClick": true, "perMachine": false, "runAfterFinish": true, "artifactName": "H2O-Setup.${ext}" },
+    "directories": { "output": "dist" }
+  },
+  "devDependencies": {
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3"
+  }
+}

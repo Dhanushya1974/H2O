@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>H2O reminder</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden;
+      font-family: system-ui, "Segoe UI", sans-serif; user-select: none; }
+    .scene { position: absolute; left: 0; right: 0; bottom: 8px; display: flex; flex-direction: column; align-items: center; }
+    .buddy { position: relative; width: 220px; padding-top: 70px; animation: walkIn 2s ease-out both; }
+    .leaving .buddy { animation: walkOut 1.6s ease-in both; }
+    .leaving .actions { opacity: 0; transition: opacity .2s; }
+    .boy { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 6px 10px rgba(0,0,0,.25));
+      animation: bob .3s ease-in-out 7 alternate; }
+    .leaving .boy { animation: bob .3s ease-in-out infinite alternate; }
+    .boy .leg { transform-box: fill-box; transform-origin: 50% 0; animation: step .3s ease-in-out 7 alternate; }
+    .boy .leg-r { animation-delay: .3s; }
+    .leaving .boy .leg { animation-iteration-count: infinite; }
+    .boy .eyes { transform-box: fill-box; transform-origin: 50% 50%; animation: blink 3.5s 2.2s infinite; }
+    .boy .water { transform-box: fill-box; transform-origin: 50% 100%; animation: slosh 1.2s ease-in-out infinite alternate; }
+    .sign {
+      position: absolute; bottom: calc(100% - 92px); left: 75%; transform: translateX(-50%);
+      width: max-content; background: #fffdf5; color: #0f2233; border: 3px solid #a0692f; border-radius: 14px;
+      padding: 12px 18px; font-weight: 800; font-size: 20px; text-align: center;
+      box-shadow: 0 6px 16px rgba(0,0,0,.3); transform-origin: 50% 160%;
+      animation: popSign .45s 1.9s ease-out both, sway 2.4s 2.4s ease-in-out infinite;
+    }
+    .actions { display: flex; gap: 8px; margin-top: 6px; animation: fadeIn .4s 2.1s both; }
+    button { font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; padding: 9px 16px; border-radius: 999px;
+      border: 2px solid #0b7fd6; background: #fff; color: #0b7fd6; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+    button.primary { background: #0b7fd6; color: #fff; }
+    button:hover { filter: brightness(1.08); }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes walkIn { from { transform: translateX(-60vw); } to { transform: translateX(0); } }
+    @keyframes walkOut { from { transform: translateX(0); } to { transform: translateX(60vw); } }
+    @keyframes step { from { transform: rotate(14deg); } to { transform: rotate(-14deg); } }
+    @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+    @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+    @keyframes popSign { 0% { opacity: 0; transform: translateX(-50%) scale(.3); } 70% { transform: translateX(-50%) scale(1.1); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
+    @keyframes sway { 0%, 100% { transform: translateX(-50%) rotate(-3deg); } 50% { transform: translateX(-50%) rotate(3deg); } }
+    @keyframes slosh { from { transform: scaleY(.9) skewY(-4deg); } to { transform: scaleY(1) skewY(4deg); } }
+  </style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <div class="buddy">
+      <div class="sign">Time to drink water! 💧</div>
+<!--BOY-->
+    </div>
+    <div class="actions" id="actions">
+      <button type="button" class="primary" id="drank">✓ I drank it</button>
+      <button type="button" id="later">Later</button>
+    </div>
+  </div>
+  <script src="overlay.js"></script>
+</body>
+</html>

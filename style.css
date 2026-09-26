@@ -120,7 +120,7 @@ body {
 .buddy { position: relative; width: min(260px, 70vw); padding-top: 90px; animation: walkIn 1.8s ease-out both; }
 .boy { display: block; width: 100%; height: auto; overflow: visible; }
 .sign {
-  position: absolute; bottom: calc(100% - 112px); left: 68%; transform: translateX(-50%);
+  position: absolute; bottom: calc(100% - 112px); left: 75%; transform: translateX(-50%);
   width: max-content; max-width: 70vw;
   background: #fffdf5; color: #0f2233; border: 3px solid #8b5a2b; border-radius: 12px;
   padding: 12px 16px; font-weight: 800; font-size: clamp(1rem, 4.5vw, 1.25rem); text-align: center;
@@ -131,6 +131,7 @@ body {
 .boy .leg { transform-box: fill-box; transform-origin: 50% 0; animation: step .3s ease-in-out 6 alternate; }
 .boy .leg-r { animation-delay: .3s; }
 .boy { animation: bob .3s ease-in-out 6 alternate; }
+.boy .eyes { transform-box: fill-box; transform-origin: 50% 50%; animation: blink 3.5s 2s infinite; }
 .boy .water { transform-box: fill-box; transform-origin: 50% 100%; animation: slosh 1.2s ease-in-out infinite alternate; }
 .buddy-actions { display: flex; gap: 8px; animation: fadeIn .4s 1.9s both; }
 .buddy-actions .btn { background: var(--surface); }
@@ -143,8 +144,17 @@ body {
 @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-6px); } }
 @keyframes popSign { 0% { opacity: 0; transform: translateX(-50%) scale(.3); } 70% { transform: translateX(-50%) scale(1.1); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
 @keyframes sway { 0%, 100% { transform: translateX(-50%) rotate(-3deg); } 50% { transform: translateX(-50%) rotate(3deg); } }
+@keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
 @keyframes slosh { from { transform: scaleY(.9) skewY(-4deg); } to { transform: scaleY(1) skewY(4deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .buddy, .sign, .boy, .boy .leg, .boy .water, .buddy-actions { animation: none !important; }
+  .buddy, .sign, .boy, .boy .leg, .boy .water, .boy .eyes, .buddy-actions { animation: none !important; }
 }
+
+.download {
+  display: block; margin-top: 16px; padding: 14px 18px; border-radius: 14px; text-decoration: none;
+  background: var(--accent); color: #fff; text-align: center;
+}
+.download b { display: block; font-size: 1.05rem; }
+.download span { font-size: .88rem; opacity: .9; }
+.download:hover { filter: brightness(1.08); }

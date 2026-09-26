@@ -11,6 +11,7 @@
     toggle: $('toggle'), toggleText: $('toggleText'), pauseBtn: $('pauseBtn'), resumeBtn: $('resumeBtn'),
     drankBtn: $('drankBtn'), permWarn: $('permWarn'), unsupported: $('unsupported'),
     installBtn: $('installBtn'), installHint: $('installHint'), testBtn: $('testBtn'),
+    permDefault: $('permDefault'), permDenied: $('permDenied'), allowBtn: $('allowBtn'),
     buddy: $('buddy'), buddyDrank: $('buddyDrank'), buddyLater: $('buddyLater'),
   };
 
@@ -48,11 +49,12 @@
   }
 
   // ---- actions ----
-  async function enable() {
-    const ok = await ensurePermission();
-    if (!ok) { state.enabled = false; save(); render(); return; }
+  // Reminders turn on right away; the animated boy works even without notification permission.
+  // Desktop pop-ups are requested in the background (Edge often shows only a bell icon for this).
+  function enable() {
     state = { enabled: true, nextAt: Date.now() + INTERVAL, pausedUntil: 0, pending: false };
     save(); render();
+    ensurePermission().finally(render);
   }
   function disable() {
     state.enabled = false; state.pausedUntil = 0; state.pending = false;
@@ -146,12 +148,15 @@
     el.resumeBtn.hidden = mode !== 'paused';
     el.drankBtn.disabled = mode !== 'on';
     el.unsupported.hidden = supported;
-    el.permWarn.hidden = !supported || Notification.permission !== 'denied';
-    el.toggle.disabled = !supported;
+    const perm = supported ? Notification.permission : 'unsupported';
+    el.permWarn.hidden = !state.enabled || perm === 'granted' || perm === 'unsupported';
+    el.permDefault.hidden = perm !== 'default';
+    el.permDenied.hidden = perm !== 'denied';
   }
 
   // ---- wiring ----
   el.toggle.addEventListener('change', () => (el.toggle.checked ? enable() : disable()));
+  el.allowBtn.addEventListener('click', () => ensurePermission().finally(render));
   el.pauseBtn.addEventListener('click', pause);
   el.resumeBtn.addEventListener('click', resume);
   el.drankBtn.addEventListener('click', drank);
@@ -188,7 +193,6 @@
 
   // Check every second for a live countdown; timestamps (not timer length) decide when to fire,
   // so browser throttling of background tabs or sleep/wake can't make reminders drift.
-  if (state.enabled && supported && Notification.permission !== 'granted') state.enabled = false;
   tick();
   setInterval(tick, 1000);
 })();

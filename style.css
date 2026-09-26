@@ -95,7 +95,7 @@ body {
 
 .warn {
   margin: 16px 0 0; padding: 10px 12px; border-radius: 10px;
-  background: var(--warn-bg); color: var(--warn-text); font-size: .9rem; text-align: left;
+  background: var(--paused-soft); color: var(--text); font-size: .9rem; text-align: left;
 }
 
 .tips { margin-top: 24px; color: var(--muted); font-size: .92rem; }

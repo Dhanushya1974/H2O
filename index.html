@@ -35,12 +35,15 @@
         <button type="button" id="drankBtn" class="btn ghost">💧 I drank — restart timer</button>
       </div>
 
-      <p class="warn" id="permWarn" hidden>
-        Notifications are blocked for this site. Click the lock icon next to the address bar →
-        <b>Notifications</b> → <b>Allow</b>, then reload this page.
-      </p>
+      <div class="warn" id="permWarn" hidden>
+        <b>Reminders are on</b>, and the boy will appear on this page. To also get desktop pop-ups while you're in other apps:
+        <span id="permDefault">click <button type="button" id="allowBtn" class="link-btn">Allow pop-ups</button>, then choose <b>Allow</b>.
+          In Edge, look for a <b>🔔 bell icon</b> at the right end of the address bar and click <b>Allow</b> there.</span>
+        <span id="permDenied" hidden>pop-ups are blocked for this site. Click the <b>lock / ⓘ icon</b> left of the address →
+          <b>Notifications</b> → <b>Allow</b>, then reload the page.</span>
+      </div>
       <p class="warn" id="unsupported" hidden>
-        This browser doesn't support notifications. Try Chrome, Edge or Firefox on a computer.
+        This browser doesn't support desktop pop-ups, but the animated reminder still works on this page.
       </p>
     </section>
 

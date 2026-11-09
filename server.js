@@ -99,8 +99,6 @@ app.post('/api/log', (req, res) => {
 
 app.get('/api/vapid', (_req, res) => res.json({ publicKey: vapid.publicKey }));
 
-// Short link to the Windows installer. It is too big to deploy (106 MB), so it lives in Vercel Blob storage.
-app.get('/download', (_req, res) => res.redirect(302, 'https://tfzpcdotlf2tau9y.public.blob.vercel-storage.com/H2O-Setup-oDwgjzq6HCNDboKK2HNahD4mjJP2f9.exe'));
 
 // Register (or re-register) a browser. Turns reminders on.
 app.post('/api/subscribe', async (req, res) => {

@@ -99,6 +99,9 @@ app.post('/api/log', (req, res) => {
 
 app.get('/api/vapid', (_req, res) => res.json({ publicKey: vapid.publicKey }));
 
+// Short link to the Windows installer. The file is too big for Vercel (106 MB), so it lives on GitHub Releases.
+app.get('/download', (_req, res) => res.redirect(302, 'https://github.com/Dhanushya1974/H2O/releases/latest/download/H2O-Setup.exe'));
+
 // Register (or re-register) a browser. Turns reminders on.
 app.post('/api/subscribe', async (req, res) => {
   const sub = req.body && req.body.subscription;

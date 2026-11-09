@@ -98,6 +98,15 @@ body {
   background: var(--paused-soft); color: var(--text); font-size: .9rem; text-align: left;
 }
 
+.download {
+  margin-top: 20px; padding: 18px 20px; text-align: center;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+}
+.download h2 { font-size: 1.05rem; margin: 0 0 6px; }
+.download p { margin: 0 0 14px; color: var(--muted); font-size: .92rem; }
+.download .btn { display: inline-block; text-decoration: none; }
+.download .small { margin: 14px 0 0; font-size: .82rem; }
+
 .tips { margin-top: 24px; color: var(--muted); font-size: .92rem; }
 .tips h2 { font-size: 1rem; color: var(--text); margin: 0 0 8px; }
 .tips ul { padding-left: 18px; margin: 0 0 12px; }

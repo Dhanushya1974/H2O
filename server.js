@@ -1,12 +1,17 @@
 // H2O server: hosts the website and sends a push reminder to each subscriber every 2 hours,
 // so reminders arrive even when the H2O tab is closed (the browser just needs to be running).
+// Runs as a normal Node server (files in data/, own timer) or on Vercel (Redis, timer calls /api/tick).
 const express = require('express');
 const webpush = require('web-push');
+const { Redis } = require('@upstash/redis');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.PORT || 3000;
+const ON_VERCEL = !!process.env.VERCEL;
+const REDIS_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const SUBS_FILE = path.join(DATA_DIR, 'subscriptions.json');
 const VAPID_FILE = path.join(DATA_DIR, 'vapid.json');
@@ -17,13 +22,14 @@ const TIMING = {
   test: { interval: 60 * 1000, pause: 30 * 1000 }, // ?test=1 on the website
 };
 
-fs.mkdirSync(DATA_DIR, { recursive: true });
-
 // ---- VAPID keys: from env, else generated once and saved ----
 let vapid = null;
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   vapid = { publicKey: process.env.VAPID_PUBLIC_KEY, privateKey: process.env.VAPID_PRIVATE_KEY };
+} else if (ON_VERCEL) {
+  throw new Error('Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY (Vercel has no disk to save generated keys)');
 } else {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
   try { vapid = JSON.parse(fs.readFileSync(VAPID_FILE, 'utf8')); } catch (_) { /* first start */ }
   if (!vapid) {
     vapid = webpush.generateVAPIDKeys();
@@ -33,13 +39,34 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:h2o@example.com', vapid.publicKey, vapid.privateKey);
 
 // ---- subscriptions: { [id]: { subscription, test, enabled, nextAt, pausedUntil } } ----
-let subs = {};
-try { subs = JSON.parse(fs.readFileSync(SUBS_FILE, 'utf8')); } catch (_) { /* none yet */ }
-function persist() {
-  const tmp = SUBS_FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(subs));
-  fs.renameSync(tmp, SUBS_FILE);
+function fileStore() {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  let subs = {};
+  try { subs = JSON.parse(fs.readFileSync(SUBS_FILE, 'utf8')); } catch (_) { /* none yet */ }
+  const persist = () => {
+    const tmp = SUBS_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(subs));
+    fs.renameSync(tmp, SUBS_FILE);
+  };
+  return {
+    get: async (id) => subs[id] || null,
+    set: async (id, s) => { subs[id] = s; persist(); },
+    del: async (id) => { delete subs[id]; persist(); },
+    all: async () => Object.entries(subs),
+  };
 }
+function redisStore() {
+  const redis = new Redis({ url: REDIS_URL, token: REDIS_TOKEN });
+  const KEY = 'h2o:subs'; // one hash, a field per subscriber
+  return {
+    get: (id) => redis.hget(KEY, id),
+    set: (id, s) => redis.hset(KEY, { [id]: s }),
+    del: (id) => redis.hdel(KEY, id),
+    all: async () => Object.entries((await redis.hgetall(KEY)) || {}),
+  };
+}
+if (ON_VERCEL && !REDIS_URL) throw new Error('Connect a Redis database (KV_REST_API_URL / KV_REST_API_TOKEN)');
+const store = REDIS_URL ? redisStore() : fileStore();
 
 const idFor = (endpoint) => crypto.createHash('sha256').update(endpoint).digest('hex').slice(0, 32);
 const timing = (s) => (s.test ? TIMING.test : TIMING.normal);
@@ -73,35 +100,41 @@ app.post('/api/log', (req, res) => {
 app.get('/api/vapid', (_req, res) => res.json({ publicKey: vapid.publicKey }));
 
 // Register (or re-register) a browser. Turns reminders on.
-app.post('/api/subscribe', (req, res) => {
+app.post('/api/subscribe', async (req, res) => {
   const sub = req.body && req.body.subscription;
   if (!sub || typeof sub.endpoint !== 'string' || !/^https:\/\//.test(sub.endpoint) || !sub.keys ||
       typeof sub.keys.p256dh !== 'string' || typeof sub.keys.auth !== 'string') {
     return res.status(400).json({ error: 'bad subscription' });
   }
   const id = idFor(sub.endpoint);
-  const s = subs[id] || { enabled: false, nextAt: 0, pausedUntil: 0 };
+  const s = (await store.get(id)) || { enabled: false, nextAt: 0, pausedUntil: 0 };
   s.subscription = { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } };
   s.test = !!req.body.test;
   applyAction(s, 'on');
-  subs[id] = s;
-  persist();
+  await store.set(id, s);
   res.json(view(id, s));
 });
 
-app.get('/api/state/:id', (req, res) => {
-  const s = subs[req.params.id];
+app.get('/api/state/:id', async (req, res) => {
+  const s = await store.get(req.params.id);
   if (!s) return res.status(404).json({ error: 'not found' });
   res.json(view(req.params.id, s));
 });
 
-app.post('/api/action', (req, res) => {
+app.post('/api/action', async (req, res) => {
   const { id, action } = req.body || {};
-  const s = subs[id];
+  const s = typeof id === 'string' ? await store.get(id) : null;
   if (!s) return res.status(404).json({ error: 'not found' });
   if (!applyAction(s, action)) return res.status(400).json({ error: 'bad action' });
-  persist();
+  await store.set(id, s);
   res.json(view(id, s));
+});
+
+// On Vercel nothing runs between requests, so an outside timer calls this every few minutes.
+app.all('/api/tick', async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({ error: 'unauthorized' });
+  res.json({ sent: await tick() });
 });
 
 app.use(express.static(path.join(__dirname, 'public'), {
@@ -111,36 +144,43 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // ---- scheduler ----
 let sending = false;
 async function tick() {
-  if (sending) return;
+  if (sending) return 0;
   sending = true;
   const now = Date.now();
-  let changed = false;
+  let sent = 0;
   try {
-    for (const [id, s] of Object.entries(subs)) {
+    for (const [id, s] of await store.all()) {
       if (!s.enabled) continue;
       const t = timing(s);
       if (s.pausedUntil) {
-        if (now >= s.pausedUntil) { s.pausedUntil = 0; s.nextAt = now + t.interval; changed = true; }
+        if (now >= s.pausedUntil) { s.pausedUntil = 0; s.nextAt = now + t.interval; await store.set(id, s); }
         continue;
       }
       if (now < s.nextAt) continue;
       // Skip missed cycles (e.g. server was down) so only one reminder goes out.
       while (s.nextAt <= now) s.nextAt += t.interval;
-      changed = true;
+      await store.set(id, s);
       const payload = JSON.stringify({ id, test: !!s.test, title: 'Time to drink water 💧', body: 'Grab a glass of water and stay hydrated!' });
       try {
         await webpush.sendNotification(s.subscription, payload, { TTL: 30 * 60, urgency: 'high', topic: 'h2o' });
+        sent++;
         console.log(new Date().toLocaleTimeString(), 'reminder sent to', id.slice(0, 6));
       } catch (err) {
-        if (err.statusCode === 404 || err.statusCode === 410) { delete subs[id]; } // browser unsubscribed
+        if (err.statusCode === 404 || err.statusCode === 410) await store.del(id); // browser unsubscribed
         else console.error('push failed', id.slice(0, 8), err.statusCode || err.message);
       }
     }
-    if (changed) persist();
+  } catch (err) {
+    console.error('tick failed', err.message);
   } finally {
     sending = false;
   }
+  return sent;
 }
-setInterval(tick, 10 * 1000);
 
-app.listen(PORT, () => console.log(`H2O running on http://localhost:${PORT} (${Object.keys(subs).length} subscribers)`));
+if (!ON_VERCEL) {
+  setInterval(tick, 10 * 1000);
+  app.listen(PORT, () => console.log(`H2O running on http://localhost:${PORT}`));
+}
+
+module.exports = app;

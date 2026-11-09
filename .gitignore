@@ -4,3 +4,6 @@ desktop/node_modules/
 desktop/dist/
 desktop/overlay.html
 data/
+
+.vercel
+.env*
